@@ -6,6 +6,7 @@ import (
 	"paint/apptype"
 
 	"fyne.io/fyne/v2"
+	"fyne.io/fyne/v2/canvas"
 	"fyne.io/fyne/v2/widget"
 )
 
@@ -61,4 +62,24 @@ func NewPxCanvas(state *apptype.State, config apptype.PaintCanvasConfig) *PaintC
 	paintCanvas.ExtendBaseWidget(paintCanvas)
 
 	return paintCanvas
+}
+
+func (paintCanvas *PaintCanvas) CreateRenderer() fyne.WidgetRenderer {
+	canvasImage := canvas.NewImageFromImage(paintCanvas.PixelData)
+	canvasImage.ScaleMode = canvas.ImageScalePixels
+	canvasImage.FillMode = canvas.ImageFillContain
+
+	canvasBorder := make([]canvas.Line, 4)
+	for i := 0; i < len(canvasBorder); i++ {
+		canvasBorder[i].StrokeColor = color.NRGBA{100, 100, 100, 255}
+		canvasBorder[i].StrokeWidth = 2
+	}
+
+	renderer := &PaintCanvasRenderer{
+		paintCanvas:  paintCanvas,
+		canvasImage:  canvasImage,
+		canvasBorder: canvasBorder,
+	}
+	paintCanvas.renderer = renderer
+	return renderer
 }

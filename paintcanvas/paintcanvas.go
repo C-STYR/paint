@@ -91,7 +91,6 @@ func (paintCanvas *PaintCanvas) TryPan(previousCoord *fyne.PointEvent, ev *deskt
 	}
 }
 
-
 // Brushable interface
 func (paintCanvas *PaintCanvas) SetColor(c color.Color, x, y int) {
 	if nrgba, ok := paintCanvas.PixelData.(*image.NRGBA); ok {
@@ -117,4 +116,24 @@ func (paintCanvas *PaintCanvas) MouseToCanvasXY(ev *desktop.MouseEvent) (*int, *
 	y := int((ev.Position.Y - yOffset) / pxSize)
 
 	return &x, &y
+}
+
+func (paintCanvas *PaintCanvas) LoadImage(img image.Image) {
+	dimensions := img.Bounds()
+
+	paintCanvas.PaintCanvasConfig.PxCols = dimensions.Dx()
+	paintCanvas.PaintCanvasConfig.PxRows = dimensions.Dy()
+
+	paintCanvas.PixelData = img
+	paintCanvas.reloadImage = true
+	paintCanvas.Refresh()
+}
+
+func (paintCanvas *PaintCanvas) NewDrawing(cols, rows int) {
+	paintCanvas.appState.SetFilePath("")
+	paintCanvas.PxCols = cols
+	paintCanvas.PxRows = rows
+	pixelData := NewBlankImage(cols, rows, color.NRGBA{128, 128, 128, 255})
+
+	paintCanvas.LoadImage(pixelData)
 }

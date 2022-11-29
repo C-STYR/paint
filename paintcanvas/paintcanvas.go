@@ -7,6 +7,7 @@ import (
 
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/canvas"
+	"fyne.io/fyne/v2/driver/desktop"
 	"fyne.io/fyne/v2/widget"
 )
 
@@ -58,7 +59,7 @@ func NewPxCanvas(state *apptype.State, config apptype.PaintCanvasConfig) *PaintC
 		PaintCanvasConfig: config,
 		appState:          state,
 	}
-	paintCanvas.PixelData = NewBlankImage(paintCanvas.PxCols, paintCanvas.PxRows, color.NGRGBA{128, 128, 128, 255})
+	paintCanvas.PixelData = NewBlankImage(paintCanvas.PxCols, paintCanvas.PxRows, color.NRGBA{128, 128, 128, 255})
 	paintCanvas.ExtendBaseWidget(paintCanvas)
 
 	return paintCanvas
@@ -82,4 +83,38 @@ func (paintCanvas *PaintCanvas) CreateRenderer() fyne.WidgetRenderer {
 	}
 	paintCanvas.renderer = renderer
 	return renderer
+}
+
+func (paintCanvas *PaintCanvas) TryPan(previousCoord *fyne.PointEvent, ev *desktop.MouseEvent) {
+	if previousCoord != nil && ev.Button == desktop.MouseButtonTertiary {
+		paintCanvas.Pan(*previousCoord, ev.PointEvent)
+	}
+}
+
+
+// Brushable interface
+func (paintCanvas *PaintCanvas) SetColor(c color.Color, x, y int) {
+	if nrgba, ok := paintCanvas.PixelData.(*image.NRGBA); ok {
+		nrgba.Set(x, y, c)
+	}
+	if rgba, ok := paintCanvas.PixelData.(*image.RGBA); ok {
+		rgba.Set(x, y, c)
+	}
+	paintCanvas.Refresh()
+}
+
+func (paintCanvas *PaintCanvas) MouseToCanvasXY(ev *desktop.MouseEvent) (*int, *int) {
+	bounds := paintCanvas.Bounds()
+	if !InBounds(ev.Position, bounds) {
+		return nil, nil
+	}
+
+	pxSize := float32(paintCanvas.PxSize)
+	xOffset := paintCanvas.CanvasOffset.X
+	yOffset := paintCanvas.CanvasOffset.Y
+
+	x := int((ev.Position.X - xOffset) / pxSize)
+	y := int((ev.Position.Y - yOffset) / pxSize)
+
+	return &x, &y
 }
